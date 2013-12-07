@@ -1,7 +1,8 @@
 import java.text.{ParsePosition, SimpleDateFormat}
 import java.util.Date
 import scalaz._
-import Scalaz._
+import scalaz.syntax.applicative._
+import scalaz.syntax.validation._
 
 object PersonParser {
   def main(args: Array[String]) {
@@ -24,7 +25,7 @@ object PersonParser {
     println
   }
 
-  def parsePerson(in: String): ValidationNEL[String, Person] = {
+  def parsePerson(in: String): ValidationNel[String, Person] = {
     val components = in.split(';').lift
     val name = components(0).fold(_.successNel[String], "No name found".failNel[String])
     val date = components(1).fold(parseDate(_), "No date found".failNel[Date])
@@ -33,7 +34,7 @@ object PersonParser {
     (name ⊛ date ⊛ address) { Person(_, _, _) }
   }
 
-  def parseDate(in: String): ValidationNEL[String, Date] = {
+  def parseDate(in: String): ValidationNel[String, Date] = {
     val sdf = new SimpleDateFormat("yyyy-MM-dd")
     sdf.parse(in, new ParsePosition(0)) match {
       case null => ("Can't parse ["+in+"] as a date").failNel[Date]
@@ -41,7 +42,7 @@ object PersonParser {
     }
   }
 
-  def parseAddress(in: String): ValidationNEL[String,List[String]] = {
+  def parseAddress(in: String): ValidationNel[String,List[String]] = {
     val address = in.split(",\\s*")
     if (address.length > 1)
       address.toList.successNel[String]
